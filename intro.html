@@ -350,6 +350,123 @@ No — all levels welcome. You can start from zero and still feel successful fro
     
     <!-- Global Init -->
     <script src="assets/js/custom.js"></script>
+<script>
+/* --- GA4 helper --- */
+function sendGAEvent(name, params) {
+  try {
+    window.gtag && gtag('event', name, params || {});
+    // console.log('GA4 event:', name, params); // uncomment for debugging
+  } catch (e) {}
+}
+
+/* Basic product info for the Intro Pack */
+const INTRO_ITEM = {
+  item_name: 'Capoeira Intro Pack – 4 Classes',
+  item_id: 'intro_4class_2wk',
+  price: 45.00,
+  currency: 'AUD',
+  location: 'St Leonards'
+};
+
+/* --- CLICK TRACKING --- */
+document.addEventListener('click', function (e) {
+  const el = e.target;
+  const anc = el.closest('a, button, [role="button"]') || el;
+
+  const txt = (anc.textContent || '').trim().toLowerCase();
+  const href = (anc.getAttribute && anc.getAttribute('href')) || '';
+
+  // 1) PayPal buttons / links
+  const isPayPal =
+    txt.includes('paypal') ||
+    (anc.getAttribute && anc.getAttribute('aria-label') && anc.getAttribute('aria-label').toLowerCase().includes('paypal')) ||
+    (href && href.indexOf('paypal.com') !== -1) ||
+    anc.className.toLowerCase().includes('paypal');
+
+  if (isPayPal) {
+    // user is starting checkout with PayPal
+    sendGAEvent('add_payment_info', {
+      payment_type: 'paypal',
+      currency: INTRO_ITEM.currency,
+      value: INTRO_ITEM.price,
+      items: [INTRO_ITEM]
+    });
+    // also log a generic begin_checkout
+    sendGAEvent('begin_checkout', {
+      currency: INTRO_ITEM.currency,
+      value: INTRO_ITEM.price,
+      items: [INTRO_ITEM],
+      checkout_option: 'paypal'
+    });
+    return;
+  }
+
+  // 2) Card checkout button (the dark "Checkout" button)
+  const isCardCheckout =
+    txt === 'checkout' || txt.includes('checkout') ||
+    anc.id === 'checkout' || anc.className.toLowerCase().includes('checkout');
+
+  if (isCardCheckout) {
+    sendGAEvent('add_payment_info', {
+      payment_type: 'card',
+      currency: INTRO_ITEM.currency,
+      value: INTRO_ITEM.price,
+      items: [INTRO_ITEM]
+    });
+    sendGAEvent('begin_checkout', {
+      currency: INTRO_ITEM.currency,
+      value: INTRO_ITEM.price,
+      items: [INTRO_ITEM],
+      checkout_option: 'card'
+    });
+    return;
+  }
+
+  // 3) Clicks on common card icons (Visa/Mastercard/etc.)
+  const icon = el.closest('img, svg');
+  if (icon) {
+    const alt = (icon.getAttribute && icon.getAttribute('alt') || '').toLowerCase();
+    if (/(visa|mastercard|amex|card)/.test(alt)) {
+      sendGAEvent('select_promotion', {
+        promotion_name: 'card_icon_click',
+        creative_name: alt || 'card_icon',
+        items: [INTRO_ITEM]
+      });
+      return;
+    }
+  }
+}, true);
+
+/* --- DROPDOWN (SELECT) TRACKING --- */
+document.addEventListener('change', function (e) {
+  const el = e.target;
+  if (el.tagName && el.tagName.toLowerCase() === 'select') {
+    const label = (el.id || el.name || 'select').toLowerCase();
+    const val = (el.value || '').toString();
+
+    // Track the user selecting plan/quantity/etc.
+    sendGAEvent('select_item', {
+      item_list_name: 'intro_checkout_options',
+      items: [{
+        ...INTRO_ITEM,
+        item_variant: label,
+        item_category: 'checkout_option',
+        quantity: (label.includes('quantity') ? Number(val) || 1 : 1)
+      }]
+    });
+
+    // If they changed quantity, also record value at current price
+    if (label.includes('quantity')) {
+      const qty = Number(val) || 1;
+      sendGAEvent('view_cart', {
+        currency: INTRO_ITEM.currency,
+        value: INTRO_ITEM.price * qty,
+        items: [{ ...INTRO_ITEM, quantity: qty }]
+      });
+    }
+  }
+}, true);
+</script>
 
   </body>
 </html>
