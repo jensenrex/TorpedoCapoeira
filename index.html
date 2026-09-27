@@ -28,6 +28,27 @@ https://templatemo.com/tm-548-training-studio
   gtag('config', 'G-RV6QNPZ5LM');
 </script>
 
+    <style>
+      /* Trainer cards: responsive video and photo thumbnails */
+      .trainer-item .image-thumb iframe,
+      .trainer-item .image-thumb img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        border: 0;
+      }
+      .trainer-item .image-thumb img {
+        object-fit: cover;
+      }
+
+      /* Facebook page plugins: don't overflow on small screens */
+      #probono iframe,
+      #contact-us iframe {
+        max-width: 100%;
+      }
+    </style>
+    
     </head>
     
     <body>
@@ -330,6 +351,7 @@ https://templatemo.com/tm-548-training-studio
                     <br>
 <h5>"Instrutor" corda & up training</h5> 
 Tuesday, Thursday, Saturday 12pm by Zoom
+                  </article>
 
                   <!-- <article id='tabs-3'>
                     <img src="assets/images/training-image-03.jpg" alt="Third Class">
